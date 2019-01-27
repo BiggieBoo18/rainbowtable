@@ -43,14 +43,18 @@ class RainbowTable(object):
         ch.append(p)
         return ch
 
-    def rainbow_table(self):
+    def rainbow_table(self, path):
+        fp = open(path, "w")
         p = itertools.product(self.char_type, repeat=self.char_length) # product all patern in char_type
         for i, s in enumerate(tqdm(p), start=1):
             s = "".join(s)
             chain = self.chain(s)
-            self.rainbowtable.append([chain[0], chain[-1]]) # append only chain head and chain tail
+            # self.rainbowtable.append([chain[0], chain[-1]]) # append only chain head and chain tail
+            fp.writelines(" ".join([chain[0], chain[-1]]))
+            fp.write("\n") # write format: "head_chain tail_chain\n"
             if self.n_chains and i>=self.n_chains: # continue if n_chains==0 or i<n_chains, n_chains==0 is all patern
                 break
+        fp.close()
 
     def match_tail(self, p):
         for chain in self.rainbowtable:
@@ -59,6 +63,8 @@ class RainbowTable(object):
         return False
 
     def decode(self, t):
+        if not self.rainbowtable:
+            return False
         for i in range(self.chain_length-1, -1, -1): # column
             p = self.reduction(t, i) # to plain
             for j in range((self.chain_length-1)-i): # loop diff from tail
@@ -77,13 +83,6 @@ class RainbowTable(object):
         self.rainbowtable = [s.strip().split(" ") for s in fp.readlines()] # read format: "head_chain tail_chain\n"
         fp.close()
 
-    def write_table(self, path):
-        fp = open(path, "w")
-        for chain in self.rainbowtable:
-            fp.writelines(" ".join(chain))
-            fp.write("\n") # write format: "head_chain tail_chain\n"
-        fp.close()
-
 if __name__ == "__main__":
     # p = "password"
     p = "aaaaaaaa"
@@ -92,10 +91,9 @@ if __name__ == "__main__":
                       char_type=RainbowTable.NUM+RainbowTable.LOWER,
                       char_length=8,
                       chain_length=1000,
-                      n_chains=100000)
+                      n_chains=2821109907455//2)
 
     ch = rt.chain(p)
-    rt.rainbow_table()
-    rt.write_table("sample.rt")
-    # rt.read_table("sample.rt")
+    rt.rainbow_table("sample.rt")
+    rt.read_table("sample.rt")
     print("decoded =", rt.decode(rt.md5(p)))
